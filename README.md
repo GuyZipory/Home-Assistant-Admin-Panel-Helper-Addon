@@ -2,29 +2,43 @@
 
 **Clean API access to Home Assistant Supervisor through Nabu Casa - No ports, no ingress tokens!**
 
-## ⭐ Recommended: Custom Integration (v2.0.0)
+## 🚀 Quick Start (Recommended)
 
-Get clean URLs like Home Assistant's native API:
-```
-https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons
-https://your-instance.ui.nabu.casa/api/supervisor_gateway/health
-```
+Install the **Custom Integration** for the easiest setup:
 
-### Quick Install via HACS
+### What You Get
+- ✅ Clean URLs: `https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons`
+- ✅ No port forwarding needed
+- ✅ Works through Nabu Casa automatically
+- ✅ Simple authentication with HA tokens
+- ✅ Optional extra security with x-api-key
+
+### Install via HACS
 
 1. Open **HACS** → **Integrations**
 2. Click **⋮** → **Custom repositories**
 3. Add: `https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon`
 4. Category: **Integration**
 5. Download "**Supervisor Gateway API**"
-6. Add `supervisor_gateway:` to `configuration.yaml`
+6. Add to `configuration.yaml`:
+   ```yaml
+   supervisor_gateway:
+     api_key: "your-secret-key"  # Optional for extra security
+   ```
 7. Restart Home Assistant
 
-**[📖 Full Installation Guide →](INTEGRATION_INSTALL.md)**
+**[📖 Full Installation Guide & Documentation →](INTEGRATION_INSTALL.md)**
 
 ---
 
-## Alternative: Addon (v1.1.x - Advanced Users)
+## ⚠️ Alternative: Addon Approach (v1.x - Advanced Users Only)
+
+**Note:** The addon approach requires port forwarding and manual security configuration. **Only use this if you have specific requirements that the integration doesn't meet.**
+
+<details>
+<summary><b>Click to expand addon documentation</b></summary>
+
+### Addon Overview
 
 **Secure API gateway addon for exposing Home Assistant Supervisor API endpoints externally.**
 
@@ -568,3 +582,5 @@ MIT License - Use at your own risk
 ---
 
 **Remember**: With great power comes great responsibility. This addon gives external access to privileged APIs. Use wisely and securely.
+
+</details>
