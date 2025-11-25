@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2025-11-25
+
+### Fixed
+- Fixed SUPERVISOR_TOKEN not being injected by using proper S6 service scripts
+- Integrated with Home Assistant's S6 overlay instead of bypassing it
+- Added bashio logging for better integration with HA
+
 ## [1.0.2] - 2025-11-25
 
 ### Changed
