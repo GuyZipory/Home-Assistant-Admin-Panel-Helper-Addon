@@ -7,6 +7,18 @@ __pycache__/
 env/
 venv/
 ENV/
+.venv/
+*.egg-info/
+.eggs/
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
 
 # IDE
 .vscode/
@@ -35,6 +47,7 @@ local-dev/
 
 # Context and internal docs (not for users)
 .context/
+.claude/
 
 # Runtime data
 /data/

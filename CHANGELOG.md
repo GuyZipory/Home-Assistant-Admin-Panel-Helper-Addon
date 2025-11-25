@@ -1,106 +1,73 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the Supervisor Gateway API custom integration will be documented in this file.
 
-## [1.1.5] - 2025-11-25
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Fixed
-- Improve ingress detection by also checking X-Hass-Source header
-- Add debug logging for authentication checks
-- Better ingress authentication reliability
-
-## [1.1.4] - 2025-11-25
+## [2.0.3] - 2024-11-25
 
 ### Added
-- Root endpoint (GET /) shows available endpoints and documentation
-- Helpful hint in catch-all error responses
-
-## [1.1.3] - 2025-11-25
-
-### Fixed
-- Remove `ingress_entry: /api` to fix path routing through ingress
-- Ingress requests now reach correct endpoints without path prefix issues
-
-## [1.1.2] - 2025-11-25
-
-### Fixed
-- Add debugging to catch-all route to diagnose path routing issues through ingress
-- Log requested paths and headers when endpoint not found
-
-## [1.1.1] - 2025-11-25
-
-### Fixed
-- Trust Home Assistant ingress authentication (X-Ingress-Path header)
-- Skip IP whitelist checks for ingress requests (already authenticated by HA)
-- Allow ingress requests to bypass addon authentication
-
-## [1.1.0] - 2025-11-25
-
-### Added
-- **Home Assistant Token Authentication**: Support for HA long-lived access tokens
-- **Dual Authentication Mode**: Choose between `api_key`, `homeassistant`, or `both` auth modes
-- **Ingress API Access**: Use addon through Nabu Casa ingress without exposing ports
-- Validate HA tokens against Home Assistant's API
-- `auth_mode` configuration option
+- Optional x-api-key header authentication for extra security layer
+- Dual authentication support (HA token + optional x-api-key)
+- Comprehensive security documentation and best practices
 
 ### Changed
-- Enable `auth_api` and `homeassistant_api` in config for HA token validation
-- Updated authentication middleware to support both auth methods
-- Added `ingress_entry: /api` for cleaner ingress paths
-
-## [1.0.3] - 2025-11-25
+- Improved supervisor token access handling
+- Enhanced API documentation with security considerations
+- Updated all documentation to reflect dual authentication
 
 ### Fixed
-- Fixed SUPERVISOR_TOKEN not being injected by using proper S6 service scripts
-- Integrated with Home Assistant's S6 overlay instead of bypassing it
-- Added bashio logging for better integration with HA
+- Supervisor token retrieval from environment and hassio data
+- Version consistency across all files
 
-## [1.0.2] - 2025-11-25
-
-### Changed
-- Print ALL environment variables for debugging
-- Don't exit if SUPERVISOR_TOKEN not found, attempt to continue
-- Better debugging output
-
-## [1.0.1] - 2025-11-25
+## [2.0.2] - 2024-11-25
 
 ### Fixed
-- Improved SUPERVISOR_TOKEN detection to check multiple sources (SUPERVISOR_TOKEN, HASSIO_TOKEN, /run/secrets/)
-- Added detailed debugging when token is not found
-- Better error messages with troubleshooting steps
+- Supervisor token access issues in custom integration
+- Token retrieval from environment variables and hassio integration data
 
-## [1.0.0] - 2024-01-15
+## [2.0.1] - 2024-11-25
+
+### Fixed
+- TypeError when initializing API views
+- Corrected view initialization without passing hass parameter
+
+## [2.0.0] - 2024-11-25
 
 ### Added
-- Initial release
-- API key authentication with key rotation support
-- IP whitelisting support
-- Rate limiting (per minute and per hour)
-- Comprehensive audit logging
-- Emergency disable kill switch
-- Endpoint whitelist for security
-- Supervisor API proxy for addon management endpoints:
-  - GET /addons - List all addons
-  - GET /addons/<slug> - Get addon info
-  - POST /addons/<slug>/update - Update addon
-  - POST /addons/<slug>/start - Start addon
-  - POST /addons/<slug>/stop - Stop addon
-  - POST /addons/<slug>/restart - Restart addon
-- Key management endpoints:
-  - POST /manage/generate-key - Generate new API keys
-  - POST /manage/rotate-key - Rotate keys with grace period
-  - POST /manage/auto-rotate - One-click automatic rotation
-  - POST /manage/revoke-key - Revoke keys immediately
-  - GET /manage/list-keys - List all keys with metadata
-  - GET /manage - Web UI for key management
-- Multi-architecture support (amd64, aarch64, armhf, armv7, i386)
-- Configurable log levels
-- Health check endpoint (GET /health)
-- IP detection endpoint (GET /my-ip) - Shows your IP for whitelist setup
+- **Initial custom integration release**
+- Clean API URLs through Home Assistant's native API (no ingress tokens)
+- Works through Nabu Casa without port forwarding
+- Home Assistant long-lived token authentication
+- API endpoints:
+  - `GET /api/supervisor_gateway/` - API documentation
+  - `GET /api/supervisor_gateway/health` - Health check (no auth)
+  - `GET /api/supervisor_gateway/addons` - List all addons
+  - `GET /api/supervisor_gateway/addons/{slug}` - Get addon info
+  - `POST /api/supervisor_gateway/addons/{slug}/start` - Start addon
+  - `POST /api/supervisor_gateway/addons/{slug}/stop` - Stop addon
+  - `POST /api/supervisor_gateway/addons/{slug}/restart` - Restart addon
+  - `POST /api/supervisor_gateway/addons/{slug}/update` - Update addon
+- HACS support
+- Configuration via configuration.yaml
+- Automatic Supervisor API proxying
 
-### Security
-- All requests require valid API key
-- IP whitelisting prevents unauthorized networks
-- Rate limiting prevents brute force attacks
-- All access attempts logged with client IP
-- Emergency disable for instant shutdown
+### Changed
+- Complete architectural shift from standalone addon to custom integration
+- Simplified authentication (HA tokens instead of custom API keys)
+- Zero port forwarding required
+
+---
+
+## Version Numbering
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** version: Breaking changes
+- **MINOR** version: New features (backward compatible)
+- **PATCH** version: Bug fixes (backward compatible)
+
+## Repository History
+
+**Note:** This repository previously contained a standalone addon (v1.x) which has been deprecated in favor of the custom integration approach (v2.x). The custom integration provides cleaner URLs, better security, and easier installation through HACS.
