@@ -79,9 +79,17 @@ class SupervisorGatewayAddonsView(HomeAssistantView):
     async def get(self, request):
         """Handle GET request - list all addons."""
         try:
-            supervisor_token = self.hass.data.get("hassio_auth_token") or request.headers.get("X-Supervisor-Token")
+            # Get supervisor token from environment or hassio data
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
 
             if not supervisor_token:
+                # Try getting from hassio integration
+                if "hassio" in self.hass.data:
+                    supervisor_token = self.hass.data["hassio"].get("supervisor_token")
+
+            if not supervisor_token:
+                _LOGGER.error("Cannot access Supervisor token")
                 return self.json_message("Supervisor token not available", 500)
 
             async with aiohttp.ClientSession() as session:
@@ -112,7 +120,12 @@ class SupervisorGatewayAddonView(HomeAssistantView):
     async def get(self, request, addon_slug):
         """Handle GET request - get addon info."""
         try:
-            supervisor_token = self.hass.data.get("hassio_auth_token") or request.headers.get("X-Supervisor-Token")
+            # Get supervisor token from environment or hassio data
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
 
             if not supervisor_token:
                 return self.json_message("Supervisor token not available", 500)
@@ -150,7 +163,12 @@ class SupervisorGatewayAddonActionView(HomeAssistantView):
             return self.json_message(f"Invalid action. Allowed: {', '.join(allowed_actions)}", 400)
 
         try:
-            supervisor_token = self.hass.data.get("hassio_auth_token") or request.headers.get("X-Supervisor-Token")
+            # Get supervisor token from environment or hassio data
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
 
             if not supervisor_token:
                 return self.json_message("Supervisor token not available", 500)
