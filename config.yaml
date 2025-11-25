@@ -1,5 +1,5 @@
 name: Supervisor API Gateway
-version: "1.0.3"
+version: "1.1.0"
 slug: supervisor_api_gateway
 description: Secure API gateway for exposing Supervisor API endpoints externally
 url: https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon
@@ -12,10 +12,11 @@ arch:
 init: false
 hassio_api: true
 hassio_role: manager
-auth_api: false
-homeassistant_api: false
+auth_api: true
+homeassistant_api: true
 ingress: true
 ingress_port: 8099
+ingress_entry: /api
 panel_icon: mdi:api
 ports:
   8099/tcp: 8099
@@ -23,7 +24,9 @@ ports_description:
   8099/tcp: API Gateway port (expose this via Nabu Casa)
 webui: "http://[HOST]:[PORT:8099]/manage"
 options:
-  # Legacy API keys (auto-migrated to key database)
+  # Authentication mode: 'api_key' (custom keys) or 'homeassistant' (HA tokens) or 'both'
+  auth_mode: both
+  # Legacy API keys (auto-migrated to key database) - used when auth_mode is 'api_key' or 'both'
   api_keys: []
   # Master key for key management operations (required for /manage endpoints)
   master_key: ""
@@ -33,6 +36,7 @@ options:
   enable_emergency_disable: false
   log_level: info
 schema:
+  auth_mode: list(api_key|homeassistant|both)
   api_keys:
     - str?
   master_key: str?

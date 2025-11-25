@@ -45,6 +45,7 @@ if not SUPERVISOR_TOKEN:
         pass
 
 SUPERVISOR_URL = "http://supervisor"
+HOMEASSISTANT_URL = "http://supervisor/core"
 
 # Security state
 rate_limit_store: Dict[str, List[datetime]] = defaultdict(list)
@@ -207,6 +208,37 @@ def migrate_legacy_keys():
 
 
 # =============================================================================
+# HOME ASSISTANT TOKEN VALIDATION
+# =============================================================================
+
+def validate_ha_token(token: str) -> bool:
+    """
+    Validate a Home Assistant long-lived access token
+    Returns True if valid, False otherwise
+    """
+    try:
+        response = requests.get(
+            f"{HOMEASSISTANT_URL}/api/",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=5
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            # HA API returns {"message": "API running."} for valid tokens
+            if data.get("message") == "API running.":
+                logger.debug("Home Assistant token validated successfully")
+                return True
+
+        logger.warning(f"HA token validation failed: {response.status_code}")
+        return False
+
+    except Exception as e:
+        logger.error(f"Error validating HA token: {e}")
+        return False
+
+
+# =============================================================================
 # CONFIGURATION & STARTUP
 # =============================================================================
 
@@ -316,7 +348,7 @@ def check_rate_limit(client_id: str) -> Tuple[bool, Optional[str]]:
 
 def authenticate_request() -> Tuple[bool, Optional[str], Optional[Dict]]:
     """
-    Authenticate incoming request using hashed keys
+    Authenticate incoming request using either API keys or HA tokens based on auth_mode
     Returns: (authenticated, error_message, key_metadata)
     """
     auth_header = request.headers.get('Authorization', '')
@@ -324,30 +356,52 @@ def authenticate_request() -> Tuple[bool, Optional[str], Optional[Dict]]:
     if not auth_header.startswith('Bearer '):
         return False, "Missing or invalid Authorization header", None
 
-    provided_key = auth_header[7:]
+    provided_token = auth_header[7:]
+    auth_mode = config.get('auth_mode', 'api_key')
 
-    # Find key in database
-    key_data = find_key(provided_key)
+    # Try API key authentication
+    if auth_mode in ['api_key', 'both']:
+        key_data = find_key(provided_token)
 
-    if not key_data:
+        if key_data:
+            # Check key status
+            if key_data["status"] == "revoked":
+                return False, "API key has been revoked", None
+
+            if key_data["status"] == "deprecated":
+                # Still allow but warn
+                logger.warning(f"Deprecated key used: {key_data['name']}")
+                # Check if past grace period
+                grace_until = datetime.fromisoformat(key_data["grace_until"])
+                if datetime.now() > grace_until:
+                    # Auto-revoke
+                    key_hash = hash_key(provided_token)
+                    revoke_key(key_hash)
+                    return False, "API key has expired (past grace period)", None
+
+            logger.debug(f"Authenticated via API key: {key_data['name']}")
+            return True, None, key_data
+
+    # Try Home Assistant token authentication
+    if auth_mode in ['homeassistant', 'both']:
+        if validate_ha_token(provided_token):
+            # Create a pseudo key_data for HA tokens
+            ha_token_data = {
+                "name": "Home Assistant Token",
+                "status": "active",
+                "created_at": datetime.now().isoformat(),
+                "last_used": datetime.now().isoformat()
+            }
+            logger.debug("Authenticated via Home Assistant token")
+            return True, None, ha_token_data
+
+    # If we get here, authentication failed
+    if auth_mode == 'api_key':
         return False, "Invalid API key", None
-
-    # Check key status
-    if key_data["status"] == "revoked":
-        return False, "API key has been revoked", None
-
-    if key_data["status"] == "deprecated":
-        # Still allow but warn
-        logger.warning(f"Deprecated key used: {key_data['name']}")
-        # Check if past grace period
-        grace_until = datetime.fromisoformat(key_data["grace_until"])
-        if datetime.now() > grace_until:
-            # Auto-revoke
-            key_hash = hash_key(provided_key)
-            revoke_key(key_hash)
-            return False, "API key has expired (past grace period)", None
-
-    return True, None, key_data
+    elif auth_mode == 'homeassistant':
+        return False, "Invalid Home Assistant token", None
+    else:  # both
+        return False, "Invalid API key or Home Assistant token", None
 
 
 def audit_log(endpoint: str, method: str, client_ip: str, status: str,

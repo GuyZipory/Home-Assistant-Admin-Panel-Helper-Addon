@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2025-11-25
+
+### Added
+- **Home Assistant Token Authentication**: Support for HA long-lived access tokens
+- **Dual Authentication Mode**: Choose between `api_key`, `homeassistant`, or `both` auth modes
+- **Ingress API Access**: Use addon through Nabu Casa ingress without exposing ports
+- Validate HA tokens against Home Assistant's API
+- `auth_mode` configuration option
+
+### Changed
+- Enable `auth_api` and `homeassistant_api` in config for HA token validation
+- Updated authentication middleware to support both auth methods
+- Added `ingress_entry: /api` for cleaner ingress paths
+
 ## [1.0.3] - 2025-11-25
 
 ### Fixed

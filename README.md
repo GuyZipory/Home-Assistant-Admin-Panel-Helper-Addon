@@ -121,11 +121,91 @@ This shows your real external IP that you should add to `ip_whitelist`.
 
 ⚠️ **Important:** Don't use `http://homeassistant.local:8099/my-ip` - it will show your internal network IP (like 192.168.x.x) which won't work for external access!
 
+### Authentication Modes
+
+The addon supports three authentication modes:
+
+**1. API Key Mode** (default for port access):
+```yaml
+auth_mode: api_key
+api_keys:
+  - "your-64-char-api-key-here"
+```
+
+**2. Home Assistant Token Mode** (for ingress access):
+```yaml
+auth_mode: homeassistant
+# No api_keys needed - uses HA long-lived access tokens
+```
+
+**3. Both Modes** (accepts either):
+```yaml
+auth_mode: both
+api_keys:
+  - "your-api-key-here"  # Optional if using HA tokens
+```
+
+### Using Ingress (No Port Forwarding Required)
+
+If you want to use this addon through Nabu Casa **without exposing port 8099**, you can use the ingress path with Home Assistant tokens:
+
+#### Step 1: Configure for HA Token Authentication
+
+```yaml
+auth_mode: homeassistant  # or 'both' to allow both
+ip_whitelist: []  # Can leave empty for ingress
+rate_limit_per_minute: 30
+rate_limit_per_hour: 500
+enable_emergency_disable: false
+log_level: info
+```
+
+#### Step 2: Generate Home Assistant Long-Lived Access Token
+
+1. In Home Assistant, click your profile (bottom left)
+2. Scroll down to "Long-Lived Access Tokens"
+3. Click "Create Token"
+4. Give it a name (e.g., "External Dashboard")
+5. Copy the token (you'll only see it once!)
+
+#### Step 3: Access via Ingress
+
+Your external dashboard can now call:
+
+```javascript
+// Base URL through Nabu Casa ingress
+const BASE_URL = "https://xxxxx.ui.nabu.casa/api/hassio_ingress/INGRESS_TOKEN";
+const HA_TOKEN = "your-long-lived-access-token";
+
+// Make API calls
+fetch(`${BASE_URL}/addons`, {
+  headers: {
+    "Authorization": `Bearer ${HA_TOKEN}`,
+    "Content-Type": "application/json"
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+```
+
+**Note:** You can find your ingress URL by clicking "Open Web UI" in the addon page - it will look like `https://xxxxx.ui.nabu.casa/api/hassio_ingress/RANDOM_TOKEN/`.
+
+**Advantages of Ingress Mode:**
+- ✅ No port forwarding needed
+- ✅ Works with Nabu Casa out of the box
+- ✅ Uses Home Assistant's built-in authentication
+- ✅ Tokens can be revoked from HA profile page
+
+**Disadvantages:**
+- ⚠️ Ingress URLs contain session tokens that may rotate
+- ⚠️ Slightly more complex URL structure
+
 ### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `api_keys` | list | `[]` | List of API keys for authentication (64+ chars recommended) |
+| `auth_mode` | string | `both` | Authentication mode: `api_key`, `homeassistant`, or `both` |
+| `api_keys` | list | `[]` | List of API keys for authentication (64+ chars recommended, used when auth_mode is `api_key` or `both`) |
 | `master_key` | string | `""` | Master key for key management endpoints (optional, 64+ chars) |
 | `ip_whitelist` | list | `[]` | List of allowed IP addresses or CIDR ranges |
 | `rate_limit_per_minute` | int | `30` | Maximum requests per minute per client |
