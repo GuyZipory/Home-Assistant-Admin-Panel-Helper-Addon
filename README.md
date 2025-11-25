@@ -9,8 +9,8 @@ A Home Assistant custom integration that provides clean REST API access to Super
 - ✅ Clean URLs: `https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons`
 - ✅ No port forwarding needed
 - ✅ Works through Nabu Casa automatically
-- ✅ Simple authentication with HA tokens
-- ✅ Optional extra security with x-api-key
+- ✅ Dual authentication (HA token + x-api-key)
+- ✅ Secure access with required API key
 - ✅ Manage addons from external dashboards
 
 ---
@@ -60,20 +60,15 @@ Edit your `/config/configuration.yaml` and add:
 
 ```yaml
 supervisor_gateway:
-  api_key: "your-secret-api-key-here"  # Optional but recommended
+  api_key: "your-secret-api-key-here"  # Required
 ```
 
-Or minimal configuration (no extra API key):
-```yaml
-supervisor_gateway:
-```
-
-**💡 What's the `api_key` for?**
-- Adds an extra layer of security beyond HA authentication
+**⚠️ The `api_key` is REQUIRED**
+- Provides dual authentication for maximum security
 - External requests must include both:
   - `Authorization: Bearer YOUR_HA_TOKEN` (Home Assistant auth)
-  - `x-api-key: YOUR_API_KEY` (Your custom API key)
-- If not configured, only HA token is required
+  - `x-api-key: YOUR_API_KEY` (Your custom API key from config)
+- Use a long, random string (recommended: 32+ characters)
 
 ### Restart Home Assistant
 
@@ -112,7 +107,7 @@ All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervis
 
 ## Authentication
 
-The integration supports **dual authentication** for maximum security:
+The integration requires **dual authentication** for maximum security:
 
 ### 1. Home Assistant Long-Lived Token (Required)
 
@@ -124,9 +119,9 @@ Create a token for your external dashboard:
 4. Name it: "External Dashboard"
 5. **Copy the token** (starts with `eyJ...`)
 
-### 2. x-api-key Header (Optional but Recommended)
+### 2. x-api-key Header (Required)
 
-Additional security layer configured in `configuration.yaml`
+Must be configured in `configuration.yaml` - all requests must include this header
 
 ---
 
@@ -135,13 +130,13 @@ Additional security layer configured in `configuration.yaml`
 ```javascript
 const HA_URL = "https://your-instance.ui.nabu.casa";
 const HA_TOKEN = "your-long-lived-token";
-const API_KEY = "your-api-key";  // If configured
+const API_KEY = "your-api-key-from-config";  // Required
 
 // List all addons
 fetch(`${HA_URL}/api/supervisor_gateway/addons`, {
   headers: {
     "Authorization": `Bearer ${HA_TOKEN}`,
-    "x-api-key": API_KEY,
+    "x-api-key": API_KEY,  // Required
     "Content-Type": "application/json"
   }
 })
@@ -153,7 +148,7 @@ fetch(`${HA_URL}/api/supervisor_gateway/addons/some_addon/restart`, {
   method: "POST",
   headers: {
     "Authorization": `Bearer ${HA_TOKEN}`,
-    "x-api-key": API_KEY,
+    "x-api-key": API_KEY,  // Required
     "Content-Type": "application/json"
   }
 })
@@ -178,17 +173,17 @@ This integration exposes Supervisor API endpoints which allow **addon management
 **Security measures in place:**
 - ✅ Uses Home Assistant's built-in authentication
 - ✅ All requests go through HA's auth middleware
-- ✅ Optional x-api-key for additional protection
+- ✅ Required x-api-key for dual authentication
 - ✅ Tokens can be revoked from your HA profile
 - ✅ Works only with Supervisor API endpoints (no direct system access)
 - ✅ Install/uninstall operations intentionally not exposed
 
 ### 🔐 Best Practices
 
-1. **Use the x-api-key configuration** for external access:
+1. **Use a strong api_key** (required):
    ```yaml
    supervisor_gateway:
-     api_key: "use-a-long-random-string-here"
+     api_key: "use-a-long-random-string-32-chars-minimum"
    ```
 
 2. **Keep tokens secure**:
@@ -241,7 +236,7 @@ Authentication issue. Check:
 3. If using x-api-key, verify it matches configuration.yaml
 
 ### "Invalid or missing x-api-key header"
-If you configured `api_key` in configuration.yaml, you must include the `x-api-key` header in all requests.
+The `api_key` is required in configuration.yaml, and you must include the `x-api-key` header in all requests with the matching value.
 
 ### Check Logs
 Settings → System → Logs → Search for "supervisor_gateway"
@@ -263,7 +258,7 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ## Version
 
-**Current Version**: 2.0.3
+**Current Version**: 3.0.0
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 

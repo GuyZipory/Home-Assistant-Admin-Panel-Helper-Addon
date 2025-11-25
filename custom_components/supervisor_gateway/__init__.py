@@ -14,7 +14,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional("api_key"): cv.string,
+                vol.Required("api_key"): cv.string,
             }
         )
     },
@@ -35,10 +35,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # Register API views
     await api.async_setup(hass)
 
-    if conf.get("api_key"):
-        _LOGGER.info("Supervisor Gateway API endpoints registered with x-api-key protection")
-    else:
-        _LOGGER.warning("Supervisor Gateway API endpoints registered WITHOUT x-api-key (not recommended for external access)")
+    _LOGGER.info("Supervisor Gateway API endpoints registered with required x-api-key protection")
 
     return True
 
