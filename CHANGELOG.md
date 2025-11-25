@@ -36,8 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - 2024-11-25
 
 ### Added
-- **Initial custom integration release**
-- Clean API URLs through Home Assistant's native API (no ingress tokens)
+- **Initial release**
+- Clean API URLs through Home Assistant's native API
 - Works through Nabu Casa without port forwarding
 - Home Assistant long-lived token authentication
 - API endpoints:
@@ -49,14 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `POST /api/supervisor_gateway/addons/{slug}/stop` - Stop addon
   - `POST /api/supervisor_gateway/addons/{slug}/restart` - Restart addon
   - `POST /api/supervisor_gateway/addons/{slug}/update` - Update addon
-- HACS support
+- HACS support via custom repository
 - Configuration via configuration.yaml
 - Automatic Supervisor API proxying
-
-### Changed
-- Complete architectural shift from standalone addon to custom integration
-- Simplified authentication (HA tokens instead of custom API keys)
-- Zero port forwarding required
 
 ---
 
@@ -67,7 +62,3 @@ This project follows [Semantic Versioning](https://semver.org/):
 - **MAJOR** version: Breaking changes
 - **MINOR** version: New features (backward compatible)
 - **PATCH** version: Bug fixes (backward compatible)
-
-## Repository History
-
-**Note:** This repository previously contained a standalone addon (v1.x) which has been deprecated in favor of the custom integration approach (v2.x). The custom integration provides cleaner URLs, better security, and easier installation through HACS.
