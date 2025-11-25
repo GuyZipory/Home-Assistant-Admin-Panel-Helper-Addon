@@ -121,7 +121,62 @@ You now have clean API access through Nabu Casa with:
 - ✅ No port forwarding
 - ✅ No ingress tokens in URLs
 - ✅ Home Assistant authentication
+- ✅ Optional x-api-key for extra security
 - ✅ Works immediately through Nabu Casa
+
+---
+
+## Security Best Practices
+
+### ⚠️ Important: What This Integration Does
+
+This integration allows external applications to **manage your Home Assistant addons** through the Supervisor API. This includes:
+- Starting, stopping, and restarting addons
+- Updating addons to newer versions
+- Reading addon configurations and status
+
+### 🔐 Recommended Security Measures
+
+1. **Use the x-api-key configuration** for external access:
+   ```yaml
+   supervisor_gateway:
+     api_key: "use-a-long-random-string-here"
+   ```
+
+2. **Keep tokens secure**:
+   - Never commit tokens to version control
+   - Don't share tokens in screenshots or logs
+   - Use different tokens for different applications
+
+3. **Rotate tokens regularly**:
+   - Create new tokens every 90 days
+   - Delete old tokens from your HA profile
+
+4. **Monitor access**:
+   - Check HA logs regularly: Settings → System → Logs
+   - Search for "supervisor_gateway" to see API activity
+   - Watch for unexpected addon changes
+
+5. **Limit token permissions** (if possible):
+   - Create dedicated user accounts for external apps
+   - Use the principle of least privilege
+
+### 🚨 What to Watch For
+
+**Suspicious activity indicators:**
+- Addons restarting unexpectedly
+- Addon updates you didn't initiate
+- Failed authentication attempts in logs
+- Unknown IP addresses in access logs
+
+**If compromised:**
+1. Immediately revoke the HA token (Profile → Long-Lived Access Tokens)
+2. Change the `api_key` in configuration.yaml
+3. Restart Home Assistant
+4. Review recent addon changes
+5. Check HA logs for unauthorized access
+
+---
 
 ## Troubleshooting
 
