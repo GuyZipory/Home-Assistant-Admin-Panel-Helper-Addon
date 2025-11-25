@@ -54,12 +54,25 @@ Uses Home Assistant long-lived tokens - simple and secure!
 
 1. Edit your `/config/configuration.yaml`
 
-2. Add this line:
+2. Add configuration (with optional API key for extra security):
+   ```yaml
+   supervisor_gateway:
+     api_key: "your-secret-api-key-here"  # Optional but recommended
+   ```
+
+   Or minimal (no extra API key):
    ```yaml
    supervisor_gateway:
    ```
 
 3. Save the file
+
+**💡 What's the `api_key` for?**
+- Adds an extra layer of security beyond HA authentication
+- External requests must include both:
+  - `Authorization: Bearer YOUR_HA_TOKEN` (Home Assistant auth)
+  - `x-api-key: YOUR_API_KEY` (Your custom API key)
+- If not configured, only HA token is required
 
 ### Step 3: Restart Home Assistant
 
@@ -88,11 +101,13 @@ You should see JSON documentation of available endpoints.
 ```javascript
 const HA_URL = "https://your-instance.ui.nabu.casa";
 const HA_TOKEN = "your-long-lived-token-here";
+const API_KEY = "your-api-key-from-config";  // If configured
 
 // List addons
 fetch(`${HA_URL}/api/supervisor_gateway/addons`, {
   headers: {
     "Authorization": `Bearer ${HA_TOKEN}`,
+    "x-api-key": API_KEY,  // Include if you configured api_key
     "Content-Type": "application/json"
   }
 })

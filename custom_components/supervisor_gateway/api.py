@@ -8,7 +8,26 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "supervisor_gateway"
 SUPERVISOR_URL = "http://supervisor"
+
+
+def validate_api_key(hass: HomeAssistant, request) -> bool:
+    """Validate x-api-key header if configured."""
+    if DOMAIN not in hass.data:
+        return True  # Not configured, allow access
+
+    configured_key = hass.data[DOMAIN].get("api_key")
+    if not configured_key:
+        return True  # No API key configured, allow access
+
+    # Check x-api-key header
+    provided_key = request.headers.get("x-api-key")
+    if provided_key != configured_key:
+        _LOGGER.warning(f"Invalid x-api-key from {request.remote}")
+        return False
+
+    return True
 
 
 async def async_setup(hass: HomeAssistant):
@@ -29,9 +48,15 @@ class SupervisorGatewayView(HomeAssistantView):
 
     async def get(self, request):
         """Handle GET request."""
+        # Check if x-api-key is configured
+        api_key_required = False
+        if DOMAIN in request.app["hass"].data:
+            if request.app["hass"].data[DOMAIN].get("api_key"):
+                api_key_required = True
+
         return self.json({
             "message": "Supervisor Gateway API",
-            "version": "2.0.0",
+            "version": "2.0.3",
             "available_endpoints": {
                 "utility": [
                     "GET /api/supervisor_gateway/health",
@@ -45,7 +70,10 @@ class SupervisorGatewayView(HomeAssistantView):
                     "POST /api/supervisor_gateway/addons/{slug}/restart"
                 ]
             },
-            "authentication": "Use your Home Assistant long-lived access token"
+            "authentication": {
+                "ha_token": "Required - Use 'Authorization: Bearer YOUR_HA_TOKEN' header",
+                "x_api_key": "Required - Use 'x-api-key: YOUR_API_KEY' header" if api_key_required else "Not configured (optional)"
+            }
         })
 
 
@@ -78,6 +106,10 @@ class SupervisorGatewayAddonsView(HomeAssistantView):
 
     async def get(self, request):
         """Handle GET request - list all addons."""
+        # Validate x-api-key header
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
         try:
             # Get supervisor token from environment or hassio data
             import os
@@ -119,6 +151,10 @@ class SupervisorGatewayAddonView(HomeAssistantView):
 
     async def get(self, request, addon_slug):
         """Handle GET request - get addon info."""
+        # Validate x-api-key header
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
         try:
             # Get supervisor token from environment or hassio data
             import os
@@ -157,6 +193,10 @@ class SupervisorGatewayAddonActionView(HomeAssistantView):
 
     async def post(self, request, addon_slug, action):
         """Handle POST request - perform addon action."""
+        # Validate x-api-key header
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
         allowed_actions = ["update", "start", "stop", "restart"]
 
         if action not in allowed_actions:
