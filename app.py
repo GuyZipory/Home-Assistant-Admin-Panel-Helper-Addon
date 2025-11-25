@@ -354,11 +354,13 @@ def authenticate_request() -> Tuple[bool, Optional[str], Optional[Dict]]:
     # Check if request comes through Home Assistant ingress
     # Ingress already authenticated the user, so we trust it
     ingress_path = request.headers.get('X-Ingress-Path')
-    hassio_key = request.headers.get('X-Hassio-Key')
+    hass_source = request.headers.get('X-Hass-Source')
 
-    if ingress_path is not None:
+    logger.debug(f"Auth check - X-Ingress-Path: {ingress_path}, X-Hass-Source: {hass_source}")
+
+    if ingress_path is not None or hass_source == 'core.ingress':
         # Request comes through HA ingress - already authenticated by HA
-        logger.debug("Request authenticated via Home Assistant ingress")
+        logger.info(f"Request authenticated via Home Assistant ingress (path={ingress_path}, source={hass_source})")
         ingress_token_data = {
             "name": "Home Assistant Ingress",
             "status": "active",
@@ -454,7 +456,7 @@ def security_middleware(f):
         method = request.method
 
         # Check if request comes through ingress (already authenticated by HA)
-        from_ingress = request.headers.get('X-Ingress-Path') is not None
+        from_ingress = request.headers.get('X-Ingress-Path') is not None or request.headers.get('X-Hass-Source') == 'core.ingress'
 
         # 1. Emergency disable check
         if check_emergency_disable():
