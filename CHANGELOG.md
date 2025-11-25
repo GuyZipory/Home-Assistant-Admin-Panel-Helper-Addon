@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2025-11-25
+
+### Fixed
+- Trust Home Assistant ingress authentication (X-Ingress-Path header)
+- Skip IP whitelist checks for ingress requests (already authenticated by HA)
+- Allow ingress requests to bypass addon authentication
+
 ## [1.1.0] - 2025-11-25
 
 ### Added
