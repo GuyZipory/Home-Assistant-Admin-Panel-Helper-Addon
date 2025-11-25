@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2025-11-25
+
+### Changed
+- Print ALL environment variables for debugging
+- Don't exit if SUPERVISOR_TOKEN not found, attempt to continue
+- Better debugging output
+
 ## [1.0.1] - 2025-11-25
 
 ### Fixed
