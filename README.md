@@ -4,9 +4,7 @@
 
 A Home Assistant custom integration that provides clean REST API access to Supervisor endpoints for managing addons remotely through your external dashboards.
 
-## 🚀 Quick Start
-
-### What You Get
+## What You Get
 
 - ✅ Clean URLs: `https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons`
 - ✅ No port forwarding needed
@@ -15,21 +13,80 @@ A Home Assistant custom integration that provides clean REST API access to Super
 - ✅ Optional extra security with x-api-key
 - ✅ Manage addons from external dashboards
 
-### Install via HACS
+---
 
-1. Open **HACS** → **Integrations**
-2. Click **⋮** → **Custom repositories**
-3. Add: `https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon`
-4. Category: **Integration**
-5. Download "**Supervisor Gateway API**"
-6. Add to `configuration.yaml`:
-   ```yaml
-   supervisor_gateway:
-     api_key: "your-secret-key"  # Optional for extra security
+## Installation
+
+### Method 1: HACS (Recommended)
+
+1. Open **HACS** in Home Assistant
+2. Click the **3 dots** menu (top right)
+3. Select **Custom repositories**
+4. Add repository URL:
    ```
-7. Restart Home Assistant
+   https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon
+   ```
+5. Select category: **Integration**
+6. Click **Add**
+7. Find "**Supervisor Gateway API**" in HACS
+8. Click **Download**
+9. Restart Home Assistant
 
-**[📖 Full Installation Guide & Documentation →](INTEGRATION_INSTALL.md)**
+### Method 2: Manual Installation
+
+1. Download the `custom_components/supervisor_gateway` folder from this repository
+
+2. Copy it to your Home Assistant config directory:
+   ```
+   /config/custom_components/supervisor_gateway/
+   ```
+
+3. Your structure should look like:
+   ```
+   /config/
+     custom_components/
+       supervisor_gateway/
+         __init__.py
+         api.py
+         manifest.json
+         README.md
+   ```
+
+4. Restart Home Assistant
+
+### Configuration
+
+Edit your `/config/configuration.yaml` and add:
+
+```yaml
+supervisor_gateway:
+  api_key: "your-secret-api-key-here"  # Optional but recommended
+```
+
+Or minimal configuration (no extra API key):
+```yaml
+supervisor_gateway:
+```
+
+**💡 What's the `api_key` for?**
+- Adds an extra layer of security beyond HA authentication
+- External requests must include both:
+  - `Authorization: Bearer YOUR_HA_TOKEN` (Home Assistant auth)
+  - `x-api-key: YOUR_API_KEY` (Your custom API key)
+- If not configured, only HA token is required
+
+### Restart Home Assistant
+
+Go to **Settings** → **System** → **Restart** and click **Restart Home Assistant**
+
+### Verify It's Working
+
+Visit (replace with your Nabu Casa URL):
+```
+https://your-instance.ui.nabu.casa/api/supervisor_gateway
+```
+
+You should see JSON documentation of available endpoints.
 
 ---
 
@@ -51,19 +108,29 @@ All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervis
 - `POST /addons/{slug}/restart` - Restart an addon
 - `POST /addons/{slug}/update` - Update an addon
 
-### Authentication
+---
+
+## Authentication
 
 The integration supports **dual authentication** for maximum security:
 
-1. **Home Assistant Long-Lived Token** (required)
-   - Standard HA authentication
-   - Create from your profile → Long-Lived Access Tokens
+### 1. Home Assistant Long-Lived Token (Required)
 
-2. **x-api-key Header** (optional but recommended)
-   - Additional security layer
-   - Configure in `configuration.yaml`
+Create a token for your external dashboard:
 
-### Usage Example
+1. Click your **profile** (bottom left in HA)
+2. Scroll to "**Long-Lived Access Tokens**"
+3. Click "**Create Token**"
+4. Name it: "External Dashboard"
+5. **Copy the token** (starts with `eyJ...`)
+
+### 2. x-api-key Header (Optional but Recommended)
+
+Additional security layer configured in `configuration.yaml`
+
+---
+
+## Usage Example
 
 ```javascript
 const HA_URL = "https://your-instance.ui.nabu.casa";
@@ -98,7 +165,7 @@ fetch(`${HA_URL}/api/supervisor_gateway/addons/some_addon/restart`, {
 
 ## Security
 
-### ⚠️ Important Security Considerations
+### ⚠️ Important: What This Integration Does
 
 This integration exposes Supervisor API endpoints which allow **addon management operations**. While useful for external dashboards, please be aware:
 
@@ -116,25 +183,46 @@ This integration exposes Supervisor API endpoints which allow **addon management
 - ✅ Works only with Supervisor API endpoints (no direct system access)
 - ✅ Install/uninstall operations intentionally not exposed
 
-### Best Practices
+### 🔐 Best Practices
 
-- 🔐 Use the optional `api_key` for external access
-- 🔐 Keep your HA tokens secure and never commit them to version control
-- 🔐 Regularly rotate your tokens (recommended: every 90 days)
-- 🔐 Monitor your HA logs for suspicious activity
-- 🔐 Only share tokens with trusted applications
-- 🔐 Use different tokens for different external applications
+1. **Use the x-api-key configuration** for external access:
+   ```yaml
+   supervisor_gateway:
+     api_key: "use-a-long-random-string-here"
+   ```
 
-**[📖 Full Security Guide →](SECURITY.md)**
+2. **Keep tokens secure**:
+   - Never commit tokens to version control
+   - Don't share tokens in screenshots or logs
+   - Use different tokens for different applications
 
----
+3. **Rotate tokens regularly**:
+   - Create new tokens every 90 days
+   - Delete old tokens from your HA profile
 
-## Documentation
+4. **Monitor access**:
+   - Check HA logs regularly: Settings → System → Logs
+   - Search for "supervisor_gateway" to see API activity
+   - Watch for unexpected addon changes
 
-- **[Installation Guide](INTEGRATION_INSTALL.md)** - Detailed installation and setup instructions
-- **[Security Policy](SECURITY.md)** - Security best practices and vulnerability reporting
-- **[Contributing](CONTRIBUTING.md)** - Guidelines for contributing to this project
-- **[Changelog](CHANGELOG.md)** - Version history and changes
+5. **Limit token permissions** (if possible):
+   - Create dedicated user accounts for external apps
+   - Use the principle of least privilege
+
+### 🚨 Suspicious Activity & Response
+
+**Watch for these indicators:**
+- Addons restarting unexpectedly
+- Addon updates you didn't initiate
+- Failed authentication attempts in logs
+- Unknown activity patterns
+
+**If compromised:**
+1. **Immediately revoke** the HA token (Profile → Long-Lived Access Tokens)
+2. **Change** the `api_key` in configuration.yaml
+3. **Restart** Home Assistant
+4. **Review** recent addon changes in logs
+5. **Check** HA logs for unauthorized access patterns
 
 ---
 
@@ -160,11 +248,16 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ---
 
+## Documentation
+
+- **[Changelog](CHANGELOG.md)** - Version history and changes
+
+---
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon/issues)
 - **Community**: [Home Assistant Community](https://community.home-assistant.io/)
-- **Security**: See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
 
 ---
 
