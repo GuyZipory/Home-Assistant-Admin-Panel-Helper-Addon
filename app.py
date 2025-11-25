@@ -351,6 +351,22 @@ def authenticate_request() -> Tuple[bool, Optional[str], Optional[Dict]]:
     Authenticate incoming request using either API keys or HA tokens based on auth_mode
     Returns: (authenticated, error_message, key_metadata)
     """
+    # Check if request comes through Home Assistant ingress
+    # Ingress already authenticated the user, so we trust it
+    ingress_path = request.headers.get('X-Ingress-Path')
+    hassio_key = request.headers.get('X-Hassio-Key')
+
+    if ingress_path is not None:
+        # Request comes through HA ingress - already authenticated by HA
+        logger.debug("Request authenticated via Home Assistant ingress")
+        ingress_token_data = {
+            "name": "Home Assistant Ingress",
+            "status": "active",
+            "created_at": datetime.now().isoformat(),
+            "last_used": datetime.now().isoformat()
+        }
+        return True, None, ingress_token_data
+
     auth_header = request.headers.get('Authorization', '')
 
     if not auth_header.startswith('Bearer '):
@@ -437,13 +453,16 @@ def security_middleware(f):
         endpoint = request.path
         method = request.method
 
+        # Check if request comes through ingress (already authenticated by HA)
+        from_ingress = request.headers.get('X-Ingress-Path') is not None
+
         # 1. Emergency disable check
         if check_emergency_disable():
             audit_log(endpoint, method, client_ip, "blocked", "Emergency disable active")
             return jsonify({"error": "Service temporarily disabled"}), 503
 
-        # 2. IP whitelist check
-        if not check_ip_whitelist(client_ip):
+        # 2. IP whitelist check (skip for ingress requests - HA already authenticated)
+        if not from_ingress and not check_ip_whitelist(client_ip):
             audit_log(endpoint, method, client_ip, "blocked", "IP not whitelisted")
             return jsonify({"error": "Access denied: IP not whitelisted"}), 403
 
