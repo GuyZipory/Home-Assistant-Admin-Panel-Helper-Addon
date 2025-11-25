@@ -5,6 +5,32 @@ All notable changes to the Supervisor Gateway API custom integration will be doc
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2024-11-25
+
+### ⚠️ BREAKING CHANGES
+
+**x-api-key is now REQUIRED**
+- The `api_key` configuration is now mandatory in `configuration.yaml`
+- All API requests must include the `x-api-key` header
+- Upgrading from 2.x requires adding `api_key` to your configuration
+
+**Migration from 2.x:**
+```yaml
+# Add this to your configuration.yaml
+supervisor_gateway:
+  api_key: "your-long-random-string-here"
+```
+
+### Changed
+- x-api-key authentication is now required (was optional)
+- Configuration schema now requires `api_key` field
+- API validation now rejects requests without x-api-key header
+- Updated all documentation to reflect required authentication
+- Enhanced security with mandatory dual authentication
+
+### Rationale
+This breaking change improves security by enforcing dual authentication for all installations, preventing accidental exposure of Supervisor API without proper protection.
+
 ## [2.0.3] - 2024-11-25
 
 ### Added

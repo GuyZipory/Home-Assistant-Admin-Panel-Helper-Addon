@@ -13,16 +13,22 @@ SUPERVISOR_URL = "http://supervisor"
 
 
 def validate_api_key(hass: HomeAssistant, request) -> bool:
-    """Validate x-api-key header if configured."""
+    """Validate x-api-key header (required)."""
     if DOMAIN not in hass.data:
-        return True  # Not configured, allow access
+        _LOGGER.error("Supervisor Gateway not configured - api_key required in configuration.yaml")
+        return False
 
     configured_key = hass.data[DOMAIN].get("api_key")
     if not configured_key:
-        return True  # No API key configured, allow access
+        _LOGGER.error("api_key not configured in configuration.yaml - this is required")
+        return False
 
     # Check x-api-key header
     provided_key = request.headers.get("x-api-key")
+    if not provided_key:
+        _LOGGER.warning(f"Missing x-api-key header from {request.remote}")
+        return False
+
     if provided_key != configured_key:
         _LOGGER.warning(f"Invalid x-api-key from {request.remote}")
         return False
@@ -48,15 +54,9 @@ class SupervisorGatewayView(HomeAssistantView):
 
     async def get(self, request):
         """Handle GET request."""
-        # Check if x-api-key is configured
-        api_key_required = False
-        if DOMAIN in request.app["hass"].data:
-            if request.app["hass"].data[DOMAIN].get("api_key"):
-                api_key_required = True
-
         return self.json({
             "message": "Supervisor Gateway API",
-            "version": "2.0.3",
+            "version": "3.0.0",
             "available_endpoints": {
                 "utility": [
                     "GET /api/supervisor_gateway/health",
@@ -72,7 +72,7 @@ class SupervisorGatewayView(HomeAssistantView):
             },
             "authentication": {
                 "ha_token": "Required - Use 'Authorization: Bearer YOUR_HA_TOKEN' header",
-                "x_api_key": "Required - Use 'x-api-key: YOUR_API_KEY' header" if api_key_required else "Not configured (optional)"
+                "x_api_key": "Required - Use 'x-api-key: YOUR_API_KEY' header - Must be configured in configuration.yaml"
             }
         })
 
@@ -89,7 +89,7 @@ class SupervisorGatewayHealthView(HomeAssistantView):
         return self.json({
             "status": "healthy",
             "service": "supervisor-gateway",
-            "version": "2.0.3"
+            "version": "3.0.0"
         })
 
 
