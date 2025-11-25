@@ -1204,16 +1204,23 @@ if __name__ == '__main__':
         logger.critical("  - Environment: SUPERVISOR_TOKEN")
         logger.critical("  - Environment: HASSIO_TOKEN")
         logger.critical("  - File: /run/secrets/SUPERVISOR_TOKEN")
-        logger.critical("Available environment variables:")
+        logger.critical("")
+        logger.critical("ALL available environment variables:")
         for key in sorted(os.environ.keys()):
-            if 'TOKEN' in key or 'HASSIO' in key or 'SUPERVISOR' in key:
-                logger.critical(f"  - {key}")
+            value = os.environ[key]
+            # Truncate long values
+            if len(value) > 50:
+                value = value[:50] + "..."
+            logger.critical(f"  {key} = {value}")
         logger.critical("")
         logger.critical("Troubleshooting:")
         logger.critical("1. Verify config.yaml has 'hassio_api: true'")
         logger.critical("2. Verify addon has been fully restarted")
         logger.critical("3. Check Home Assistant Supervisor logs")
-        exit(1)
+        logger.critical("4. Try rebuilding the addon")
+        logger.warning("Attempting to continue WITHOUT token (might fail)...")
+        # Don't exit, let's try to continue and see what happens
+        # exit(1)
 
     logger.info("Security configuration:")
     logger.info(f"  - Active Keys: {sum(1 for k in keys_db.values() if k['status'] == 'active')}")
