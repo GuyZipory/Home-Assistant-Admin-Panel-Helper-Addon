@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2025-11-25
+
+### Added
+- Root endpoint (GET /) shows available endpoints and documentation
+- Helpful hint in catch-all error responses
+
 ## [1.1.3] - 2025-11-25
 
 ### Fixed

@@ -1225,7 +1225,39 @@ def restart_addon(addon_slug):
         return jsonify({"error": "Internal server error"}), 500
 
 
-@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint - show available endpoints"""
+    return jsonify({
+        "message": "Supervisor API Gateway",
+        "version": "1.1.3",
+        "available_endpoints": {
+            "utility": [
+                "GET /health - Health check",
+                "GET /my-ip - Get your IP address"
+            ],
+            "addon_management": [
+                "GET /addons - List all addons",
+                "GET /addons/{slug} - Get addon info",
+                "POST /addons/{slug}/update - Update addon",
+                "POST /addons/{slug}/start - Start addon",
+                "POST /addons/{slug}/stop - Stop addon",
+                "POST /addons/{slug}/restart - Restart addon"
+            ],
+            "key_management": [
+                "GET /manage - Web UI for key management",
+                "POST /manage/generate-key - Generate new API key (requires master_key)",
+                "POST /manage/rotate-key - Rotate existing key (requires master_key)",
+                "POST /manage/auto-rotate - Auto-rotate with restart (requires master_key)",
+                "POST /manage/revoke-key - Revoke a key (requires master_key)",
+                "GET /manage/list-keys - List all keys (requires master_key)"
+            ]
+        },
+        "authentication": "Use 'Authorization: Bearer YOUR_TOKEN' header (API key or HA long-lived token)",
+        "documentation": "https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon"
+    })
+
+
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def catch_all(path):
     """Block all non-whitelisted endpoints"""
@@ -1239,7 +1271,8 @@ def catch_all(path):
         "debug": {
             "requested_path": request.path,
             "path_argument": path
-        }
+        },
+        "hint": "Try GET / to see available endpoints"
     }), 403
 
 
