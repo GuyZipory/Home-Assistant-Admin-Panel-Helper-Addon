@@ -15,7 +15,22 @@ Uses Home Assistant long-lived tokens - simple and secure!
 
 ### Step 1: Install the Custom Integration
 
-#### Option A: Manual Installation
+#### Option A: HACS (Easiest)
+
+1. Open **HACS** in Home Assistant
+2. Click the **3 dots** menu (top right)
+3. Select **Custom repositories**
+4. Add repository URL:
+   ```
+   https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon
+   ```
+5. Select category: **Integration**
+6. Click **Add**
+7. Find "**Supervisor Gateway API**" in HACS
+8. Click **Download**
+9. Restart Home Assistant
+
+#### Option B: Manual Installation
 
 1. Download the `custom_components/supervisor_gateway` folder from this repository
 
@@ -34,17 +49,6 @@ Uses Home Assistant long-lived tokens - simple and secure!
          manifest.json
          README.md
    ```
-
-#### Option B: SSH/Terminal
-
-```bash
-cd /config
-mkdir -p custom_components
-cd custom_components
-git clone https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon.git temp
-mv temp/custom_components/supervisor_gateway ./
-rm -rf temp
-```
 
 ### Step 2: Enable the Integration
 

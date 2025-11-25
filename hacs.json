@@ -1,0 +1,8 @@
+{
+  "name": "Supervisor Gateway API",
+  "content_in_root": false,
+  "filename": "supervisor_gateway",
+  "render_readme": true,
+  "domains": ["supervisor_gateway"],
+  "homeassistant": "2023.1.0"
+}
