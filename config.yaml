@@ -1,5 +1,5 @@
 name: Supervisor API Gateway
-version: "1.0.0"
+version: "1.0.1"
 slug: supervisor_api_gateway
 description: Secure API gateway for exposing Supervisor API endpoints externally
 url: https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon

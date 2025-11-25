@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2025-11-25
+
+### Fixed
+- Improved SUPERVISOR_TOKEN detection to check multiple sources (SUPERVISOR_TOKEN, HASSIO_TOKEN, /run/secrets/)
+- Added detailed debugging when token is not found
+- Better error messages with troubleshooting steps
+
 ## [1.0.0] - 2024-01-15
 
 ### Added
