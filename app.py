@@ -1229,9 +1229,17 @@ def restart_addon(addon_slug):
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def catch_all(path):
     """Block all non-whitelisted endpoints"""
+    # Log for debugging
+    logger.warning(f"Catch-all hit: path='{request.path}', full_path='{request.full_path}', path_arg='{path}'")
+    logger.warning(f"Request headers: {dict(request.headers)}")
+
     return jsonify({
         "error": "Endpoint not allowed",
-        "message": "This endpoint is not exposed through the gateway"
+        "message": "This endpoint is not exposed through the gateway",
+        "debug": {
+            "requested_path": request.path,
+            "path_argument": path
+        }
     }), 403
 
 
