@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2025-11-25
+
+### Fixed
+- Improve ingress detection by also checking X-Hass-Source header
+- Add debug logging for authentication checks
+- Better ingress authentication reliability
+
 ## [1.1.4] - 2025-11-25
 
 ### Added
