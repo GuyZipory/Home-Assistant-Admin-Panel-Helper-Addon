@@ -1,6 +1,32 @@
-# Supervisor API Gateway
+# Supervisor Gateway API
 
-**Secure API gateway for exposing Home Assistant Supervisor API endpoints externally.**
+**Clean API access to Home Assistant Supervisor through Nabu Casa - No ports, no ingress tokens!**
+
+## ⭐ Recommended: Custom Integration (v2.0.0)
+
+Get clean URLs like Home Assistant's native API:
+```
+https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons
+https://your-instance.ui.nabu.casa/api/supervisor_gateway/health
+```
+
+### Quick Install via HACS
+
+1. Open **HACS** → **Integrations**
+2. Click **⋮** → **Custom repositories**
+3. Add: `https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon`
+4. Category: **Integration**
+5. Download "**Supervisor Gateway API**"
+6. Add `supervisor_gateway:` to `configuration.yaml`
+7. Restart Home Assistant
+
+**[📖 Full Installation Guide →](INTEGRATION_INSTALL.md)**
+
+---
+
+## Alternative: Addon (v1.1.x - Advanced Users)
+
+**Secure API gateway addon for exposing Home Assistant Supervisor API endpoints externally.**
 
 ## WARNING: Security Notice
 
