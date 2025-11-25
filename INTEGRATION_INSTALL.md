@@ -1,0 +1,119 @@
+# Installation Guide - Custom Integration (Recommended)
+
+## What You Get
+
+**Clean API URLs through Nabu Casa with NO port forwarding:**
+
+```
+https://your-instance.ui.nabu.casa/api/supervisor_gateway/addons
+https://your-instance.ui.nabu.casa/api/supervisor_gateway/health
+```
+
+Uses Home Assistant long-lived tokens - simple and secure!
+
+## Installation Steps
+
+### Step 1: Install the Custom Integration
+
+#### Option A: Manual Installation
+
+1. Download the `custom_components/supervisor_gateway` folder from this repository
+
+2. Copy it to your Home Assistant config directory:
+   ```
+   /config/custom_components/supervisor_gateway/
+   ```
+
+3. Your structure should look like:
+   ```
+   /config/
+     custom_components/
+       supervisor_gateway/
+         __init__.py
+         api.py
+         manifest.json
+         README.md
+   ```
+
+#### Option B: SSH/Terminal
+
+```bash
+cd /config
+mkdir -p custom_components
+cd custom_components
+git clone https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon.git temp
+mv temp/custom_components/supervisor_gateway ./
+rm -rf temp
+```
+
+### Step 2: Enable the Integration
+
+1. Edit your `/config/configuration.yaml`
+
+2. Add this line:
+   ```yaml
+   supervisor_gateway:
+   ```
+
+3. Save the file
+
+### Step 3: Restart Home Assistant
+
+1. Go to **Settings** → **System** → **Restart**
+2. Click **Restart Home Assistant**
+
+### Step 4: Verify It's Working
+
+Visit (replace with your Nabu Casa URL):
+```
+https://your-instance.ui.nabu.casa/api/supervisor_gateway
+```
+
+You should see JSON documentation of available endpoints.
+
+### Step 5: Create Long-Lived Access Token
+
+1. Click your **profile** (bottom left in HA)
+2. Scroll to "**Long-Lived Access Tokens**"
+3. Click "**Create Token**"
+4. Name it: "External Dashboard"
+5. **Copy the token** (starts with `eyJ...`)
+
+### Step 6: Use in Your External Dashboard
+
+```javascript
+const HA_URL = "https://your-instance.ui.nabu.casa";
+const HA_TOKEN = "your-long-lived-token-here";
+
+// List addons
+fetch(`${HA_URL}/api/supervisor_gateway/addons`, {
+  headers: {
+    "Authorization": `Bearer ${HA_TOKEN}`,
+    "Content-Type": "application/json"
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+```
+
+## Done!
+
+You now have clean API access through Nabu Casa with:
+- ✅ No port forwarding
+- ✅ No ingress tokens in URLs
+- ✅ Home Assistant authentication
+- ✅ Works immediately through Nabu Casa
+
+## Troubleshooting
+
+**"404 Not Found"** - Integration not loaded. Check:
+1. Files are in `/config/custom_components/supervisor_gateway/`
+2. `supervisor_gateway:` is in `configuration.yaml`
+3. Home Assistant has been restarted
+
+**"401 Unauthorized"** - Token issue. Check:
+1. Token is valid (create new one from profile)
+2. `Authorization: Bearer TOKEN` header is set correctly
+
+**Check logs:**
+Settings → System → Logs → Search for "supervisor_gateway"

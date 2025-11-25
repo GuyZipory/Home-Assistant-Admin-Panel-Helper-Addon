@@ -1,0 +1,10 @@
+{
+  "domain": "supervisor_gateway",
+  "name": "Supervisor Gateway API",
+  "documentation": "https://github.com/GuyZipory/Home-Assistant-Admin-Panel-Helper-Addon",
+  "dependencies": [],
+  "codeowners": ["@GuyZipory"],
+  "requirements": [],
+  "version": "2.0.0",
+  "iot_class": "local_polling"
+}
