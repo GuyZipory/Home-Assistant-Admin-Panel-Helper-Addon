@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2025-11-25
+
+### Fixed
+- Remove `ingress_entry: /api` to fix path routing through ingress
+- Ingress requests now reach correct endpoints without path prefix issues
+
 ## [1.1.2] - 2025-11-25
 
 ### Fixed
