@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2025-11-25
+
+### Fixed
+- Add debugging to catch-all route to diagnose path routing issues through ingress
+- Log requested paths and headers when endpoint not found
+
 ## [1.1.1] - 2025-11-25
 
 ### Fixed
