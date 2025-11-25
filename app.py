@@ -32,7 +32,18 @@ app = Flask(__name__)
 # Configuration
 CONFIG_PATH = "/data/options.json"
 KEYS_DB_PATH = "/data/keys.json"
+
+# Get Supervisor token from multiple possible sources
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN")
+if not SUPERVISOR_TOKEN:
+    SUPERVISOR_TOKEN = os.environ.get("HASSIO_TOKEN")
+if not SUPERVISOR_TOKEN:
+    try:
+        with open("/run/secrets/SUPERVISOR_TOKEN", "r") as f:
+            SUPERVISOR_TOKEN = f.read().strip()
+    except:
+        pass
+
 SUPERVISOR_URL = "http://supervisor"
 
 # Security state
@@ -1188,7 +1199,20 @@ if __name__ == '__main__':
         logger.warning("Consider adding IP whitelist for extra security")
 
     if not SUPERVISOR_TOKEN:
-        logger.critical("SUPERVISOR_TOKEN not found in environment!")
+        logger.critical("SUPERVISOR_TOKEN not found!")
+        logger.critical("Checked locations:")
+        logger.critical("  - Environment: SUPERVISOR_TOKEN")
+        logger.critical("  - Environment: HASSIO_TOKEN")
+        logger.critical("  - File: /run/secrets/SUPERVISOR_TOKEN")
+        logger.critical("Available environment variables:")
+        for key in sorted(os.environ.keys()):
+            if 'TOKEN' in key or 'HASSIO' in key or 'SUPERVISOR' in key:
+                logger.critical(f"  - {key}")
+        logger.critical("")
+        logger.critical("Troubleshooting:")
+        logger.critical("1. Verify config.yaml has 'hassio_api: true'")
+        logger.critical("2. Verify addon has been fully restarted")
+        logger.critical("3. Check Home Assistant Supervisor logs")
         exit(1)
 
     logger.info("Security configuration:")
