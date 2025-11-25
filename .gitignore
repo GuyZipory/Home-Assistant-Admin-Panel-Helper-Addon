@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Sensitive
+*.key
+*.pem
+.env
+
+# Build
+build/
+dist/
+
+# Local development (not for GitHub)
+local-dev/
+
+# Context and internal docs (not for users)
+.context/
+
+# Runtime data
+/data/
+keys.json
