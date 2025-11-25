@@ -13,8 +13,8 @@ SUPERVISOR_URL = "http://supervisor"
 
 async def async_setup(hass: HomeAssistant):
     """Set up API views."""
-    hass.http.register_view(SupervisorGatewayView(hass))
-    hass.http.register_view(SupervisorGatewayHealthView(hass))
+    hass.http.register_view(SupervisorGatewayView())
+    hass.http.register_view(SupervisorGatewayHealthView())
     hass.http.register_view(SupervisorGatewayAddonsView(hass))
     hass.http.register_view(SupervisorGatewayAddonView(hass))
     hass.http.register_view(SupervisorGatewayAddonActionView(hass))
