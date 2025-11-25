@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Finish script for Supervisor API Gateway service
+# ==============================================================================
+bashio::log.info "Supervisor API Gateway service stopped"

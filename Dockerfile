@@ -15,8 +15,10 @@ WORKDIR /app
 COPY app.py /app/
 COPY requirements.txt /app/
 
-# Set executable permissions
-RUN chmod a+x /app/app.py
+# Copy S6 service scripts
+COPY rootfs /
 
-# Run the application
-CMD ["python3", "/app/app.py"]
+# Set executable permissions
+RUN chmod a+x /app/app.py \
+    && chmod a+x /etc/services.d/supervisor-gateway/run \
+    && chmod a+x /etc/services.d/supervisor-gateway/finish
