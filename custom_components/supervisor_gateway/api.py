@@ -36,47 +36,10 @@ def validate_api_key(hass: HomeAssistant, request) -> bool:
     return True
 
 
-def get_client_ip(request) -> str:
-    """Get real client IP from request headers (Nabu Casa compatible)."""
-    # Check X-Forwarded-For header (Nabu Casa uses this)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
-        # First IP is the original client
-        return forwarded_for.split(",")[0].strip()
-
-    # Check X-Real-IP header (alternative)
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
-
-    # Fallback to request.remote (direct connection)
-    return request.remote
-
-
-def validate_ip_whitelist(hass: HomeAssistant, request) -> bool:
-    """Validate client IP against whitelist if configured."""
-    if DOMAIN not in hass.data:
-        return True
-
-    whitelist = hass.data[DOMAIN].get("ip_whitelist", [])
-    if not whitelist or len(whitelist) == 0:
-        return True  # No whitelist = allow all (optional feature)
-
-    client_ip = get_client_ip(request)
-    if client_ip not in whitelist:
-        _LOGGER.warning(f"Public IP {client_ip} not in whitelist - access denied")
-        return False
-
-    _LOGGER.debug(f"Public IP {client_ip} validated against whitelist")
-    return True
-
-
 async def async_setup(hass: HomeAssistant):
     """Set up API views."""
     hass.http.register_view(SupervisorGatewayView())
     hass.http.register_view(SupervisorGatewayHealthView())
-    hass.http.register_view(SupervisorGatewayMyIPView())
     hass.http.register_view(SupervisorGatewayAddonsView(hass))
     hass.http.register_view(SupervisorGatewayAddonView(hass))
     hass.http.register_view(SupervisorGatewayAddonActionView(hass))
@@ -93,11 +56,10 @@ class SupervisorGatewayView(HomeAssistantView):
         """Handle GET request."""
         return self.json({
             "message": "Supervisor Gateway API",
-            "version": "3.1.0",
+            "version": "3.0.0",
             "available_endpoints": {
                 "utility": [
                     "GET /api/supervisor_gateway/health",
-                    "GET /api/supervisor_gateway/my-ip",
                 ],
                 "addon_management": [
                     "GET /api/supervisor_gateway/addons",
@@ -127,41 +89,7 @@ class SupervisorGatewayHealthView(HomeAssistantView):
         return self.json({
             "status": "healthy",
             "service": "supervisor-gateway",
-            "version": "3.1.0"
-        })
-
-
-class SupervisorGatewayMyIPView(HomeAssistantView):
-    """My IP helper view - shows public IP for whitelist configuration."""
-
-    url = "/api/supervisor_gateway/my-ip"
-    name = "api:supervisor_gateway:my_ip"
-    requires_auth = True  # HA token required, NOT x-api-key
-
-    async def get(self, request):
-        """Return client's public IP address."""
-        # Log all headers for debugging
-        _LOGGER.debug(f"All request headers: {dict(request.headers)}")
-        _LOGGER.debug(f"request.remote: {request.remote}")
-
-        client_ip = get_client_ip(request)
-
-        # Determine source of IP
-        if request.headers.get("X-Forwarded-For"):
-            source = "X-Forwarded-For"
-        elif request.headers.get("X-Real-IP"):
-            source = "X-Real-IP"
-        else:
-            source = "request.remote"
-
-        return self.json({
-            "ip": client_ip,
-            "message": "This is your public IP address. Add it to ip_whitelist in configuration.yaml if you want IP restrictions.",
-            "source": source,
-            "debug": {
-                "headers": dict(request.headers),
-                "remote": request.remote
-            }
+            "version": "3.0.0"
         })
 
 
@@ -178,10 +106,6 @@ class SupervisorGatewayAddonsView(HomeAssistantView):
 
     async def get(self, request):
         """Handle GET request - list all addons."""
-        # Validate IP whitelist if configured
-        if not validate_ip_whitelist(self.hass, request):
-            return self.json_message("Access denied: IP not whitelisted", 403)
-
         # Validate x-api-key header
         if not validate_api_key(self.hass, request):
             return self.json_message("Invalid or missing x-api-key header", 401)
@@ -227,10 +151,6 @@ class SupervisorGatewayAddonView(HomeAssistantView):
 
     async def get(self, request, addon_slug):
         """Handle GET request - get addon info."""
-        # Validate IP whitelist if configured
-        if not validate_ip_whitelist(self.hass, request):
-            return self.json_message("Access denied: IP not whitelisted", 403)
-
         # Validate x-api-key header
         if not validate_api_key(self.hass, request):
             return self.json_message("Invalid or missing x-api-key header", 401)
@@ -273,10 +193,6 @@ class SupervisorGatewayAddonActionView(HomeAssistantView):
 
     async def post(self, request, addon_slug, action):
         """Handle POST request - perform addon action."""
-        # Validate IP whitelist if configured
-        if not validate_ip_whitelist(self.hass, request):
-            return self.json_message("Access denied: IP not whitelisted", 403)
-
         # Validate x-api-key header
         if not validate_api_key(self.hass, request):
             return self.json_message("Invalid or missing x-api-key header", 401)

@@ -11,7 +11,6 @@ A Home Assistant custom integration that provides clean REST API access to Super
 - ✅ Works through Nabu Casa automatically
 - ✅ Dual authentication (HA token + x-api-key)
 - ✅ Secure access with required API key
-- ✅ Optional IP whitelist for extra security
 - ✅ Manage addons from external dashboards
 
 ---
@@ -62,9 +61,6 @@ Edit your `/config/configuration.yaml` and add:
 ```yaml
 supervisor_gateway:
   api_key: "your-secret-api-key-here"  # Required
-  ip_whitelist:  # Optional - restrict access to specific public IPs
-    - "203.0.113.1"
-    - "198.51.100.42"
 ```
 
 **⚠️ The `api_key` is REQUIRED**
@@ -73,12 +69,6 @@ supervisor_gateway:
   - `Authorization: Bearer YOUR_HA_TOKEN` (Home Assistant auth)
   - `x-api-key: YOUR_API_KEY` (Your custom API key from config)
 - Use a long, random string (recommended: 32+ characters)
-
-**💡 Optional: IP Whitelist**
-- Restrict API access to specific public IP addresses
-- If configured, only requests from whitelisted IPs will be allowed
-- If not configured or empty, all IPs are allowed (backward compatible)
-- Use `/my-ip` endpoint to discover your public IP (see below)
 
 ### Restart Home Assistant
 
@@ -104,7 +94,6 @@ All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervis
 #### Utility Endpoints
 - `GET /health` - Health check (no authentication required)
 - `GET /` - API documentation
-- `GET /my-ip` - Show your public IP address (HA token only, no x-api-key needed)
 
 #### Addon Management
 - `GET /addons` - List all installed addons
@@ -113,43 +102,6 @@ All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervis
 - `POST /addons/{slug}/stop` - Stop an addon
 - `POST /addons/{slug}/restart` - Restart an addon
 - `POST /addons/{slug}/update` - Update an addon
-
-### IP Whitelist (Optional)
-
-Restrict API access to specific public IP addresses for enhanced security.
-
-**How to find your public IP:**
-1. Access the `/my-ip` endpoint with only your HA token (no x-api-key needed):
-   ```bash
-   curl -H "Authorization: Bearer YOUR_HA_TOKEN" \
-        https://your-instance.ui.nabu.casa/api/supervisor_gateway/my-ip
-   ```
-
-2. Response shows your public IP:
-   ```json
-   {
-     "ip": "203.0.113.1",
-     "message": "This is your public IP address. Add it to ip_whitelist in configuration.yaml if you want IP restrictions.",
-     "source": "X-Forwarded-For"
-   }
-   ```
-
-3. Add it to your configuration:
-   ```yaml
-   supervisor_gateway:
-     api_key: "your-api-key"
-     ip_whitelist:
-       - "203.0.113.1"  # Your public IP
-   ```
-
-4. Restart Home Assistant
-
-**How it works:**
-- When accessing through Nabu Casa, your public IP is extracted from `X-Forwarded-For` or `X-Real-IP` headers
-- If `ip_whitelist` is configured, only requests from those IPs are allowed (403 Forbidden otherwise)
-- If `ip_whitelist` is not configured or empty, all IPs are allowed (backward compatible)
-- Applies to all protected endpoints (addon management)
-- Does NOT apply to `/health` and `/my-ip` endpoints
 
 ---
 
@@ -222,7 +174,6 @@ This integration exposes Supervisor API endpoints which allow **addon management
 - ✅ Uses Home Assistant's built-in authentication
 - ✅ All requests go through HA's auth middleware
 - ✅ Required x-api-key for dual authentication
-- ✅ Optional IP whitelist for restricting access by public IP
 - ✅ Tokens can be revoked from your HA profile
 - ✅ Works only with Supervisor API endpoints (no direct system access)
 - ✅ Install/uninstall operations intentionally not exposed
@@ -235,26 +186,21 @@ This integration exposes Supervisor API endpoints which allow **addon management
      api_key: "use-a-long-random-string-32-chars-minimum"
    ```
 
-2. **Consider IP whitelisting** (optional):
-   - Use `/my-ip` endpoint to discover your public IP
-   - Add trusted IPs to `ip_whitelist` configuration
-   - Blocks all other IPs from accessing addon management endpoints
-
-3. **Keep tokens secure**:
+2. **Keep tokens secure**:
    - Never commit tokens to version control
    - Don't share tokens in screenshots or logs
    - Use different tokens for different applications
 
-4. **Rotate tokens regularly**:
+3. **Rotate tokens regularly**:
    - Create new tokens every 90 days
    - Delete old tokens from your HA profile
 
-5. **Monitor access**:
+4. **Monitor access**:
    - Check HA logs regularly: Settings → System → Logs
    - Search for "supervisor_gateway" to see API activity
    - Watch for unexpected addon changes
 
-6. **Limit token permissions** (if possible):
+5. **Limit token permissions** (if possible):
    - Create dedicated user accounts for external apps
    - Use the principle of least privilege
 
@@ -289,13 +235,6 @@ Authentication issue. Check:
 2. `Authorization: Bearer TOKEN` header is set correctly
 3. If using x-api-key, verify it matches configuration.yaml
 
-### "403 Access denied: IP not whitelisted"
-Your public IP is not in the whitelist. Options:
-1. Use `/my-ip` endpoint to discover your current public IP
-2. Add your IP to `ip_whitelist` in configuration.yaml
-3. Remove or empty the `ip_whitelist` to allow all IPs
-4. Restart Home Assistant after config changes
-
 ### "Invalid or missing x-api-key header"
 The `api_key` is required in configuration.yaml, and you must include the `x-api-key` header in all requests with the matching value.
 
@@ -319,7 +258,7 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ## Version
 
-**Current Version**: 3.1.0
+**Current Version**: 3.0.0
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 
