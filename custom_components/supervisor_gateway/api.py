@@ -140,6 +140,10 @@ class SupervisorGatewayMyIPView(HomeAssistantView):
 
     async def get(self, request):
         """Return client's public IP address."""
+        # Log all headers for debugging
+        _LOGGER.debug(f"All request headers: {dict(request.headers)}")
+        _LOGGER.debug(f"request.remote: {request.remote}")
+
         client_ip = get_client_ip(request)
 
         # Determine source of IP
@@ -153,7 +157,11 @@ class SupervisorGatewayMyIPView(HomeAssistantView):
         return self.json({
             "ip": client_ip,
             "message": "This is your public IP address. Add it to ip_whitelist in configuration.yaml if you want IP restrictions.",
-            "source": source
+            "source": source,
+            "debug": {
+                "headers": dict(request.headers),
+                "remote": request.remote
+            }
         })
 
 
