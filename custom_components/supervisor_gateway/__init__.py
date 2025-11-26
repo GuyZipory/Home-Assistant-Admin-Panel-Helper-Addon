@@ -15,7 +15,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required("api_key"): cv.string,
-                vol.Optional("ip_whitelist", default=[]): vol.All(cv.ensure_list, [cv.string]),
             }
         )
     },
@@ -30,8 +29,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # Store config
     conf = config.get(DOMAIN, {})
     hass.data[DOMAIN] = {
-        "api_key": conf.get("api_key"),
-        "ip_whitelist": conf.get("ip_whitelist", [])
+        "api_key": conf.get("api_key")
     }
 
     # Register API views

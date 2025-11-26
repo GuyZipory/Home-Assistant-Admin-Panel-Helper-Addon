@@ -5,33 +5,6 @@ All notable changes to the Supervisor Gateway API custom integration will be doc
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.0] - 2025-11-26
-
-### Added
-- **Optional IP Whitelist**: New `ip_whitelist` configuration option for restricting API access to specific public IP addresses
-  - Fully optional - backward compatible (if not configured or empty, all IPs are allowed)
-  - Extracts real client IP from `X-Forwarded-For` and `X-Real-IP` headers (Nabu Casa compatible)
-  - Returns 403 Forbidden for non-whitelisted IPs when configured
-  - Applies to all protected addon management endpoints
-  - Does not apply to `/health` and `/my-ip` endpoints
-- **New `/my-ip` Endpoint**: Helper endpoint to discover your public IP address
-  - Located at `/api/supervisor_gateway/my-ip`
-  - Requires Home Assistant token only (no x-api-key needed for convenience)
-  - Shows the client's public IP address extracted from proxy headers
-  - Displays the source of the IP (X-Forwarded-For, X-Real-IP, or request.remote)
-  - Helps users configure IP whitelist by discovering their current public IP
-
-### Changed
-- Enhanced security with optional IP-based access control
-- Improved public IP detection for Nabu Casa cloud proxy compatibility
-- Updated version to 3.1.0 across all files
-
-### Technical Details
-- Added `get_client_ip()` helper function for extracting public IP from headers
-- Added `validate_ip_whitelist()` function for IP validation logic
-- IP whitelist validation occurs before x-api-key validation in request flow
-- Configuration schema supports optional `ip_whitelist` array of strings
-
 ## [3.0.0] - 2024-11-25
 
 ### ⚠️ BREAKING CHANGES
