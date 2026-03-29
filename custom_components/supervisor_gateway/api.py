@@ -137,10 +137,10 @@ class SupervisorGatewayAuthView(HomeAssistantView):
 
         _auth_request_log[token].append(now)
 
-        return self.json({
-            "ha_token": True,
-            "x_api_key": validate_api_key(self.hass, request)
-        })
+        if not validate_api_key(self.hass, request):
+            return web.Response(status=401, text="401: Unauthorized")
+
+        return self.json({"authenticated": True})
 
 
 class SupervisorGatewayAddonsView(HomeAssistantView):

@@ -244,7 +244,7 @@ Authentication issue. Check:
 2. `Authorization: Bearer TOKEN` header is set correctly
 3. If using x-api-key, verify it matches configuration.yaml
 
-### "Invalid or missing x-api-key header"
+### "401 Unauthorized" on API endpoints
 The `api_key` is required in configuration.yaml, and you must include the `x-api-key` header in all requests with the matching value.
 
 ### Check Logs
