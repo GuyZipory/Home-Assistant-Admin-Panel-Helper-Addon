@@ -1,5 +1,7 @@
 """API views for Supervisor Gateway."""
 import logging
+import time
+from collections import defaultdict
 import aiohttp
 from aiohttp import web
 
@@ -10,6 +12,10 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "supervisor_gateway"
 SUPERVISOR_URL = "http://supervisor"
+
+AUTH_RATE_LIMIT = 3  # max requests per token
+AUTH_RATE_WINDOW = 60  # seconds
+_auth_request_log: dict[str, list[float]] = defaultdict(list)
 
 
 def validate_api_key(hass: HomeAssistant, request) -> bool:
@@ -40,9 +46,14 @@ async def async_setup(hass: HomeAssistant):
     """Set up API views."""
     hass.http.register_view(SupervisorGatewayView())
     hass.http.register_view(SupervisorGatewayHealthView())
+    hass.http.register_view(SupervisorGatewayAuthView(hass))
     hass.http.register_view(SupervisorGatewayAddonsView(hass))
     hass.http.register_view(SupervisorGatewayAddonView(hass))
     hass.http.register_view(SupervisorGatewayAddonActionView(hass))
+    hass.http.register_view(SupervisorGatewayOsInfoView(hass))
+    hass.http.register_view(SupervisorGatewayOsUpdateView(hass))
+    hass.http.register_view(SupervisorGatewayCoreInfoView(hass))
+    hass.http.register_view(SupervisorGatewayCoreUpdateView(hass))
 
 
 class SupervisorGatewayView(HomeAssistantView):
@@ -56,10 +67,11 @@ class SupervisorGatewayView(HomeAssistantView):
         """Handle GET request."""
         return self.json({
             "message": "Supervisor Gateway API",
-            "version": "3.0.0",
+            "version": "0.0.1",
             "available_endpoints": {
                 "utility": [
                     "GET /api/supervisor_gateway/health",
+                    "GET /api/supervisor_gateway/auth",
                 ],
                 "addon_management": [
                     "GET /api/supervisor_gateway/addons",
@@ -68,6 +80,14 @@ class SupervisorGatewayView(HomeAssistantView):
                     "POST /api/supervisor_gateway/addons/{slug}/start",
                     "POST /api/supervisor_gateway/addons/{slug}/stop",
                     "POST /api/supervisor_gateway/addons/{slug}/restart"
+                ],
+                "os": [
+                    "GET /api/supervisor_gateway/os/info",
+                    "POST /api/supervisor_gateway/os/update"
+                ],
+                "core": [
+                    "GET /api/supervisor_gateway/core/info",
+                    "POST /api/supervisor_gateway/core/update"
                 ]
             },
             "authentication": {
@@ -82,14 +102,44 @@ class SupervisorGatewayHealthView(HomeAssistantView):
 
     url = "/api/supervisor_gateway/health"
     name = "api:supervisor_gateway:health"
-    requires_auth = False  # Allow health checks without auth
+    requires_auth = False
 
     async def get(self, request):
         """Handle GET request."""
         return self.json({
             "status": "healthy",
             "service": "supervisor-gateway",
-            "version": "3.0.0"
+            "version": "0.0.1"
+        })
+
+
+class SupervisorGatewayAuthView(HomeAssistantView):
+    """Auth validation view."""
+
+    url = "/api/supervisor_gateway/auth"
+    name = "api:supervisor_gateway:auth"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant):
+        """Initialize."""
+        self.hass = hass
+
+    async def get(self, request):
+        """Handle GET request - validate both HA token and x-api-key."""
+        token = request.headers.get("Authorization", "")
+        now = time.monotonic()
+
+        _auth_request_log[token] = [t for t in _auth_request_log[token] if now - t < AUTH_RATE_WINDOW]
+
+        if len(_auth_request_log[token]) >= AUTH_RATE_LIMIT:
+            _LOGGER.warning("Rate limit exceeded on /auth")
+            return self.json_message("Rate limit exceeded", 429)
+
+        _auth_request_log[token].append(now)
+
+        return self.json({
+            "ha_token": True,
+            "x_api_key": validate_api_key(self.hass, request)
         })
 
 
@@ -227,4 +277,152 @@ class SupervisorGatewayAddonActionView(HomeAssistantView):
 
         except Exception as e:
             _LOGGER.error(f"Error performing {action} on addon {addon_slug}: {e}")
+            return self.json_message(f"Error: {str(e)}", 500)
+
+
+class SupervisorGatewayOsInfoView(HomeAssistantView):
+    """OS info view."""
+
+    url = "/api/supervisor_gateway/os/info"
+    name = "api:supervisor_gateway:os:info"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+
+    async def get(self, request):
+        """Handle GET request - get OS info."""
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
+        try:
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
+            if not supervisor_token:
+                return self.json_message("Supervisor token not available", 500)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{SUPERVISOR_URL}/os/info",
+                    headers={"Authorization": f"Bearer {supervisor_token}"},
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    data = await resp.json()
+                    return self.json(data, status_code=resp.status)
+
+        except Exception as e:
+            _LOGGER.error(f"Error fetching OS info: {e}")
+            return self.json_message(f"Error: {str(e)}", 500)
+
+
+class SupervisorGatewayOsUpdateView(HomeAssistantView):
+    """OS update view."""
+
+    url = "/api/supervisor_gateway/os/update"
+    name = "api:supervisor_gateway:os:update"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+
+    async def post(self, request):
+        """Handle POST request - update OS."""
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
+        try:
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
+            if not supervisor_token:
+                return self.json_message("Supervisor token not available", 500)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{SUPERVISOR_URL}/os/update",
+                    headers={"Authorization": f"Bearer {supervisor_token}"},
+                    timeout=aiohttp.ClientTimeout(total=300)
+                ) as resp:
+                    data = await resp.json()
+                    return self.json(data, status_code=resp.status)
+
+        except Exception as e:
+            _LOGGER.error(f"Error updating OS: {e}")
+            return self.json_message(f"Error: {str(e)}", 500)
+
+
+class SupervisorGatewayCoreInfoView(HomeAssistantView):
+    """Core info view."""
+
+    url = "/api/supervisor_gateway/core/info"
+    name = "api:supervisor_gateway:core:info"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+
+    async def get(self, request):
+        """Handle GET request - get Core info."""
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
+        try:
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
+            if not supervisor_token:
+                return self.json_message("Supervisor token not available", 500)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{SUPERVISOR_URL}/core/info",
+                    headers={"Authorization": f"Bearer {supervisor_token}"},
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    data = await resp.json()
+                    return self.json(data, status_code=resp.status)
+
+        except Exception as e:
+            _LOGGER.error(f"Error fetching Core info: {e}")
+            return self.json_message(f"Error: {str(e)}", 500)
+
+
+class SupervisorGatewayCoreUpdateView(HomeAssistantView):
+    """Core update view."""
+
+    url = "/api/supervisor_gateway/core/update"
+    name = "api:supervisor_gateway:core:update"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+
+    async def post(self, request):
+        """Handle POST request - update Core."""
+        if not validate_api_key(self.hass, request):
+            return self.json_message("Invalid or missing x-api-key header", 401)
+
+        try:
+            import os
+            supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+            if not supervisor_token and "hassio" in self.hass.data:
+                supervisor_token = self.hass.data["hassio"].get("supervisor_token")
+            if not supervisor_token:
+                return self.json_message("Supervisor token not available", 500)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{SUPERVISOR_URL}/core/update",
+                    headers={"Authorization": f"Bearer {supervisor_token}"},
+                    timeout=aiohttp.ClientTimeout(total=300)
+                ) as resp:
+                    data = await resp.json()
+                    return self.json(data, status_code=resp.status)
+
+        except Exception as e:
+            _LOGGER.error(f"Error updating Core: {e}")
             return self.json_message(f"Error: {str(e)}", 500)

@@ -92,8 +92,9 @@ You should see JSON documentation of available endpoints.
 All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervisor_gateway/`
 
 #### Utility Endpoints
-- `GET /health` - Health check (no authentication required)
 - `GET /` - API documentation
+- `GET /health` - Health check (no authentication required)
+- `GET /auth` - Validate HA token and x-api-key (rate limited: 3 requests/60s)
 
 #### Addon Management
 - `GET /addons` - List all installed addons
@@ -102,6 +103,14 @@ All endpoints are accessible at `https://your-instance.ui.nabu.casa/api/supervis
 - `POST /addons/{slug}/stop` - Stop an addon
 - `POST /addons/{slug}/restart` - Restart an addon
 - `POST /addons/{slug}/update` - Update an addon
+
+#### OS
+- `GET /os/info` - Get OS information
+- `POST /os/update` - Update the OS
+
+#### Core
+- `GET /core/info` - Get Home Assistant Core information
+- `POST /core/update` - Update Home Assistant Core
 
 ---
 
@@ -243,10 +252,6 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ---
 
-## Documentation
-
-- **[Changelog](CHANGELOG.md)** - Version history and changes
-
 ---
 
 ## Support
@@ -258,9 +263,9 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ## Version
 
-**Current Version**: 3.0.0
+**Current Version**: 0.0.1
 
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+See git history for version history.
 
 ---
 
