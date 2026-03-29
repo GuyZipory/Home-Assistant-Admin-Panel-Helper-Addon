@@ -263,7 +263,7 @@ Settings → System → Logs → Search for "supervisor_gateway"
 
 ## Version
 
-**Current Version**: 0.0.1
+**Current Version**: 0.0.2
 
 See git history for version history.
 

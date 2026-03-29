@@ -67,7 +67,7 @@ class SupervisorGatewayView(HomeAssistantView):
         """Handle GET request."""
         return self.json({
             "message": "Supervisor Gateway API",
-            "version": "0.0.1",
+            "version": "0.0.2",
             "available_endpoints": {
                 "utility": [
                     "GET /api/supervisor_gateway/health",
@@ -109,7 +109,7 @@ class SupervisorGatewayHealthView(HomeAssistantView):
         return self.json({
             "status": "healthy",
             "service": "supervisor-gateway",
-            "version": "0.0.1"
+            "version": "0.0.2"
         })
 
 
